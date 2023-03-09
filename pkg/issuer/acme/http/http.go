@@ -153,6 +153,15 @@ func (s *Solver) Check(ctx context.Context, issuer v1.GenericIssuer, ch *cmacme.
 		}
 	}
 
+	meta := issuer.GetObjectMeta().GetAnnotations()
+
+	disableCheckAnnotation, ok := meta[cmacme.DisableSelfCheckAnnotationKey]
+
+	if ok && strings.ToLower(disableCheckAnnotation) == "true" {
+		//Avoid self check
+		return nil
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, HTTP01Timeout)
 	defer cancel()
 	url := s.buildChallengeUrl(ch)

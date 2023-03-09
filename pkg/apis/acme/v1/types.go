@@ -49,6 +49,9 @@ const (
 	// SolverIdentificationLabelKey is added to the labels of a Pod serving an ACME challenge.
 	// Its value will be the "true" if the Pod is an HTTP-01 solver.
 	SolverIdentificationLabelKey = "acme.cert-manager.io/http01-solver"
+
+	// DisableSelfCheckAnnotationKey is added to avoid doing self check. This is particularly useful for NAT hairpin scenario
+	DisableSelfCheckAnnotationKey = "cert-manager.forked.se/disable-self-check"
 )
 
 const (
