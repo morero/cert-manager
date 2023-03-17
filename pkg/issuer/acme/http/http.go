@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/muyo/sno"
 	corev1 "k8s.io/api/core/v1"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	corev1listers "k8s.io/client-go/listers/core/v1"
@@ -153,13 +154,13 @@ func (s *Solver) Check(ctx context.Context, issuer v1.GenericIssuer, ch *cmacme.
 		}
 	}
 
-	meta := issuer.GetObjectMeta().GetAnnotations()
-
-	disableCheckAnnotation, ok := meta[cmacme.DisableSelfCheckAnnotationKey]
-
-	if ok && strings.ToLower(disableCheckAnnotation) == "true" {
-		//Avoid self check
-		return nil
+	randomDomainIPs, err := lookupIP(ch)
+	if err != nil {
+		log.V(logf.DebugLevel).Info(fmt.Sprintf("Failed to lookup host: %s", err.Error()))
+		return err
+	}
+	if len(randomDomainIPs) < 1 {
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, HTTP01Timeout)
@@ -181,6 +182,21 @@ func (s *Solver) Check(ctx context.Context, issuer v1.GenericIssuer, ch *cmacme.
 	log.V(logf.DebugLevel).Info("self check succeeded")
 
 	return nil
+}
+
+func lookupIP(ch *cmacme.Challenge) ([]net.IP, error) {
+	host := ch.Spec.DNSName
+
+	r := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{
+				Timeout: time.Millisecond * time.Duration(10000),
+			}
+			return d.DialContext(ctx, network, "8.8.8.8:53")
+		},
+	}
+	return r.LookupIP(context.Background(), "ip", fmt.Sprintf("xdns-%s.%s", sno.New(0).String(), host))
 }
 
 // CleanUp will ensure the created service, ingress and pod are clean/deleted of any

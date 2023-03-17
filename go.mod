@@ -23,6 +23,7 @@ require (
 	github.com/miekg/dns v1.1.50
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/munnerz/crd-schema-fuzz v1.0.0
+	github.com/muyo/sno v1.2.1
 	github.com/onsi/ginkgo/v2 v2.6.1
 	github.com/onsi/gomega v1.24.2
 	github.com/pavlo-v-chernykh/keystore-go/v4 v4.4.0
